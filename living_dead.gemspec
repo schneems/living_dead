@@ -1,19 +1,19 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'allocation_tracer/version'
+require 'living_dead/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "allocation_tracer"
-  spec.version       = ObjectSpace::AllocationTracer::VERSION
-  spec.authors       = ["Koichi Sasada"]
-  spec.email         = ["ko1@atdot.net"]
-  spec.summary       = %q{allocation_tracer gem adds ObjectSpace::AllocationTracer module.}
-  spec.description   = %q{allocation_tracer gem adds ObjectSpace::AllocationTracer module.}
-  spec.homepage      = "https://github.com/ko1/allocation_tracer"
+  spec.name          = "living_dead"
+  spec.version       = LivingDead::VERSION
+  spec.authors       = ["Richard Schneeman"]
+  spec.email         = ["richard.schneeman+rubygems@gmail.com"]
+  spec.summary       = %q{living_dead gem adds LivingDead module.}
+  spec.description   = %q{living_dead gem adds LivingDead module.}
+  spec.homepage      = "https://github.com/schneems/living_dead"
   spec.license       = "MIT"
 
-  spec.extensions    = %w[ext/allocation_tracer/extconf.rb]
+  spec.extensions    = %w[ext/living_dead/extconf.rb]
   spec.required_ruby_version = '>= 2.1.0'
 
   spec.files         = `git ls-files -z`.split("\x0")

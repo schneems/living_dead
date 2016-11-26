@@ -1,6 +1,6 @@
 require 'rubygems'
 require 'bundler/setup'
-require 'allocation_tracer'
+require 'living_dead'
 
 RSpec.configure do |config|
   config.mock_framework = :rspec

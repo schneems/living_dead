@@ -2,10 +2,10 @@ require "bundler/gem_tasks"
 require "rake/extensiontask"
 require 'rspec/core/rake_task'
 
-spec = Gem::Specification.load('allocation_tracer.gemspec')
+spec = Gem::Specification.load('living_dead.gemspec')
 
-Rake::ExtensionTask.new("allocation_tracer", spec){|ext|
-  ext.lib_dir = "lib/allocation_tracer"
+Rake::ExtensionTask.new("living_dead", spec){|ext|
+  ext.lib_dir = "lib/living_dead"
 }
 
 RSpec::Core::RakeTask.new('spec' => 'compile')
