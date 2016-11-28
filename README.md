@@ -23,6 +23,7 @@ You can clone this repository locally and run it:
 ```
 $ git clone https://github.com/schneems/living_dead.git
 $ cd living_dead
+$ bundle install
 $ rake compile
 ```
 
