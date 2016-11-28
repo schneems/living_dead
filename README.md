@@ -2,7 +2,7 @@
 
 This module allows to see if an object is retained "still alive" or if it is freed "dead".
 
-
+DOES NOT WORK (yet)
 
 ## Installation
 

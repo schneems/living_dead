@@ -88,38 +88,34 @@ static void
 freeobj_i(VALUE tpval, void *data)
 {
     // struct traceobj_arg *arg = (struct traceobj_arg *)data;
-    // rb_trace_arg_t *tparg = rb_tracearg_from_tracepoint(tpval);
-    // VALUE obj = rb_tracearg_object(tparg);
-    // struct allocation_info *info;
+
+    rb_trace_arg_t *tparg = rb_tracearg_from_tracepoint(tpval);
+    VALUE obj = rb_tracearg_object(tparg);
+
+    void *ptr = DATA_PTR(obj);
+
+    printf("Freed: %p\n", (void*)&ptr);
 
     // if (st_lookup(arg->object_table, (st_data_t)obj, (st_data_t *)&info)) {
 
-    // info->flags = RBASIC(obj)->flags;
-    // info->memsize = rb_obj_memsize_of(obj);
+        // info->flags = RBASIC(obj)->flags;
+        // info->memsize = rb_obj_memsize_of(obj);
 
-    // move_to_freed_list(arg, obj, info);
+        // move_to_freed_list(arg, obj, info);
 
-    // if (arg->lifetime_table) {
-    //     add_lifetime_table(arg->lifetime_table, BUILTIN_TYPE(obj), info);
-    // }
+        // if (arg->lifetime_table) {
+        //     add_lifetime_table(arg->lifetime_table, BUILTIN_TYPE(obj), info);
+        // }
     // }
 
     // arg->freed_count_table[BUILTIN_TYPE(obj)]++;
 }
 
-/*
- *
- *  call-seq:
- *     LivingDead.trace(object)  -> nil
- *
- * Traces a specific object to see if it is retained or freed
- *
- */
-static VALUE
-living_dead_trace(VALUE self, VALUE obj)
-{
-    rb_p(obj);
 
+
+static VALUE
+living_dead_start(VALUE self)
+{
     VALUE freeobj_hook;
     struct traceobj_arg *arg = get_traceobj_arg();
 
@@ -132,11 +128,32 @@ living_dead_trace(VALUE self, VALUE obj)
     return Qnil;
 }
 
+
+/*
+ *
+ *  call-seq:
+ *     LivingDead.trace(object)  -> nil
+ *
+ * Traces a specific object to see if it is retained or freed
+ *
+ */
+static VALUE
+living_dead_trace(VALUE self, VALUE obj)
+{
+    // rb_p(obj);
+
+    living_dead_start(self);
+
+    return Qnil;
+}
+
+
 void
 Init_living_dead(void)
 {
     VALUE mod = rb_mLivingDead = rb_const_get(rb_cObject, rb_intern("LivingDead"));
 
     rb_define_module_function(mod, "trace", living_dead_trace, 1);
+    rb_define_module_function(mod, "start", living_dead_start, 0);
 
 }
