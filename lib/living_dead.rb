@@ -10,6 +10,7 @@ module LivingDead
   def self.trace(*args)
     self.start
     trace = ObjectTrace.new(*args)
+
     self.tracing_hash[trace.key] = trace
     self.freed_hash[trace.key]   = false
   end
@@ -51,7 +52,11 @@ module LivingDead
       # It might also be related to calling GC in a block, but changing
       # to 1.times brings back failures.
       #
-      5.times { GC.start }
+      # Calling 2 times results in eventual failure https://twitter.com/schneems/status/804369346910896128
+      # Calling 5 times results in eventual failure https://twitter.com/schneems/status/804382968307445760
+      # Trying 10 times
+      #
+      10.times { GC.start }
     end
   public
 
