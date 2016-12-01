@@ -1,5 +1,7 @@
 # LivingDead
 
+[![Build Status](https://travis-ci.org/schneems/living_dead.svg?branch=master)](https://travis-ci.org/schneems/living_dead)
+
 This module allows to see if an object is retained "still alive" or if it is freed "dead".
 
 ![Dancing Zombies](https://www.dropbox.com/s/lshgqzek77107mh/zombies.gif?dl=1)
