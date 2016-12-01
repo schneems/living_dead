@@ -88,41 +88,54 @@ static void
 freeobj_i(VALUE tpval, void *data)
 {
     // struct traceobj_arg *arg = (struct traceobj_arg *)data;
+    VALUE freed_object_id_hash   = rb_ivar_get(rb_mLivingDead, rb_intern("freed_object_id_hash"));
+    VALUE object_id_tracing_hash = rb_ivar_get(rb_mLivingDead, rb_intern("object_id_tracing_hash"));
 
     rb_trace_arg_t *tparg = rb_tracearg_from_tracepoint(tpval);
     VALUE obj = rb_tracearg_object(tparg);
+    VALUE object_id = rb_obj_id(obj);
 
-    void *ptr = DATA_PTR(obj);
 
-    printf("Freed: %p\n", (void*)&ptr);
+    // long oid = NUM2LONG(rb_obj_id(obj));
+    // printf("Freed: %lu\n", oid);
 
-    // if (st_lookup(arg->object_table, (st_data_t)obj, (st_data_t *)&info)) {
-
-        // info->flags = RBASIC(obj)->flags;
-        // info->memsize = rb_obj_memsize_of(obj);
-
-        // move_to_freed_list(arg, obj, info);
-
-        // if (arg->lifetime_table) {
-        //     add_lifetime_table(arg->lifetime_table, BUILTIN_TYPE(obj), info);
-        // }
-    // }
-
-    // arg->freed_count_table[BUILTIN_TYPE(obj)]++;
+    // We are tracing the object_id
+    if (rb_hash_aref(object_id_tracing_hash, object_id) != Qnil ) {
+        rb_hash_aset(freed_object_id_hash, rb_obj_id(obj), Qtrue);
+    }
 }
 
+// Used for debugging only
+//
+// static void
+// newobj_i(VALUE tpval, void *data)
+// {
+//     // struct traceobj_arg *arg = (struct traceobj_arg *)data;
+
+//     rb_trace_arg_t *tparg = rb_tracearg_from_tracepoint(tpval);
+//     VALUE obj = rb_tracearg_object(tparg);
+//     long oid = NUM2LONG(rb_obj_id(obj));
+//     printf("NEW: %lu\n", oid);
+// }
 
 
 static VALUE
 living_dead_start(VALUE self)
 {
     VALUE freeobj_hook;
+    // VALUE newobj_hook;
     struct traceobj_arg *arg = get_traceobj_arg();
 
     if ((freeobj_hook = rb_ivar_get(rb_mLivingDead, rb_intern("freeobj_hook"))) == Qnil) {
         rb_ivar_set(rb_mLivingDead, rb_intern("freeobj_hook"), freeobj_hook = rb_tracepoint_new(0, RUBY_INTERNAL_EVENT_FREEOBJ, freeobj_i, arg));
-        rb_tracepoint_enable(freeobj_hook);
+        rb_ivar_set(rb_mLivingDead, rb_intern("object_id_tracing_hash"), rb_hash_new());
+        rb_ivar_set(rb_mLivingDead, rb_intern("freed_object_id_hash"), rb_hash_new());
 
+        // new hook for debugging only
+        // rb_ivar_set(rb_mLivingDead, rb_intern("newobj_hook"), newobj_hook = rb_tracepoint_new(0, RUBY_INTERNAL_EVENT_NEWOBJ, newobj_i, arg));
+
+        // rb_tracepoint_enable(newobj_hook);
+        rb_tracepoint_enable(freeobj_hook);
     }
 
     return Qnil;
@@ -137,14 +150,34 @@ living_dead_start(VALUE self)
  * Traces a specific object to see if it is retained or freed
  *
  */
+// static VALUE
+// living_dead_trace(VALUE self, VALUE obj)
+// {
+//     living_dead_start(self);
+
+//     VALUE object_id_tracing_hash = rb_ivar_get(rb_mLivingDead, rb_intern("object_id_tracing_hash"))
+
+//     rb_hash_aset(object_id_tracing_hash, rb_obj_id(obj), Qtrue);
+
+//     return Qnil;
+// }
+
+
 static VALUE
-living_dead_trace(VALUE self, VALUE obj)
+living_dead_freed_hash(VALUE self)
 {
-    // rb_p(obj);
+    VALUE freed_object_id_hash = rb_ivar_get(rb_mLivingDead, rb_intern("freed_object_id_hash"));
 
-    living_dead_start(self);
+    return freed_object_id_hash;
+}
 
-    return Qnil;
+
+static VALUE
+living_dead_tracing_hash(VALUE self)
+{
+    VALUE freed_object_id_hash = rb_ivar_get(rb_mLivingDead, rb_intern("object_id_tracing_hash"));
+
+    return freed_object_id_hash;
 }
 
 
@@ -153,7 +186,9 @@ Init_living_dead(void)
 {
     VALUE mod = rb_mLivingDead = rb_const_get(rb_cObject, rb_intern("LivingDead"));
 
-    rb_define_module_function(mod, "trace", living_dead_trace, 1);
-    rb_define_module_function(mod, "start", living_dead_start, 0);
+    // rb_define_module_function(mod, "trace",      living_dead_trace, 1);
+    rb_define_module_function(mod, "start",      living_dead_start, 0);
+    rb_define_module_function(mod, "freed_hash", living_dead_freed_hash, 0);
+    rb_define_module_function(mod, "tracing_hash", living_dead_tracing_hash, 0);
 
 }

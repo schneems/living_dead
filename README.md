@@ -2,81 +2,103 @@
 
 This module allows to see if an object is retained "still alive" or if it is freed "dead".
 
-DOES NOT WORK (yet)
+## Problems
 
-## Questions for Koichi
+There be dragons see `LivingDead.gc_start` to see some of the hacks we have to do for who knows why to get this to work.
 
-**Goal:** I am trying to write a tool that will allow you see if a specific object is in retained in memory.
+## Install
 
-**Method:** I record the memory address of the object after it has been created, then using the C api and `RUBY_INTERNAL_EVENT_FREEOBJ`, when the `free_i` hook is called I can check to see if the object being freed is the one we have recorded.
-
-Please let me know if you have a better method to accomplish my goal.
-
-> I used `allocation_tracer` as a blueprint for the C code, so much of it should be familiar to you. I appologize though for my C code, I am not extremely familiar with C or with the ruby c-api.
-
-**Problem:** It doesn't work. All the pointers I get back from `free_i` are the same
-
-**Reproduction:**
-
-You can clone this repository locally and run it:
+In your Gemfile add:
 
 ```
-$ git clone https://github.com/schneems/living_dead.git
-$ cd living_dead
+gem 'living_dead'
+```
+
+Then run
+
+```
 $ bundle install
+```
+
+## How it works
+
+Before you use this you should understand how it works. This gem is a c-extension. It hooks into the Ruby tracepoint API and registeres a hook for the `RUBY_INTERNAL_EVENT_FREEOBJ` event. This
+event gets called when an object is freed (i.e. it is not retained and garbage collection has been called).
+
+When you call `LivingDead.trace(obj)` we store the `object_id` of the thing you are "tracing" in a hash. Then inside of our c-extension hook we listen for when an object is freed. When this happens we check to see if that object's `object_id` matches one in our hash. If it does we mark it down in a seperate "freed" hash.
+
+We don't retain the objects you are tracing but we do keep a copy of the `object_id`, we can then use this same number to check the freed hash to see if it was recorded as being freed.
+
+> WARNING: Seriously, see `LivingDead.gc_start`. This library isn't bullet proof.
+
+## Quick Start
+
+Require the library and use `LivingDead.trace` to "trace" an object. Later use `LivingDead.traced_objects` to iterate through "tracers" of each object.
+
+Here is an example of tracing an object that is not retained:
+
+```
+require 'living_dead'
+
+def run
+  obj = Object.new
+  LivingDead.trace(obj)
+
+  return nil
+end
+
+run
+
+puts LivingDead.traced_objects.select {|tracer| tracer.retained? }.count
+# => 0
+```
+
+> Note: Calling `LivingDead.traced_objects` auto calls `GC.start`, you don't need to do it manually. However you should look at the implementation of `LivingDead.gc_start` to understand the depth of hacks you're playing with.
+
+Here is an example of tracing an object that IS retained:
+
+```
+require 'living_dead'
+
+def run
+  obj = Object.new
+  LivingDead.trace(obj)
+
+  return obj
+end
+
+@retained_here = run
+
+puts LivingDead.traced_objects.select {|tracer| tracer.retained? }.count
+# => 1
+```
+
+You can get more ways of interacting with a tracer by looking at `LivingDead::ObjectTrace`.
+
+## Development
+
+Compile the code:
+
+```
 $ rake compile
 ```
 
-I wrote a test script. It prints out the memory address of an object, and then we print off the pointer to every object that gets passed into `free_i`.
+Run the tests:
 
 ```
-$ rake compile && ruby scratch.rb
-# ...
-OBJECT ADDRESS TO BE FREED: 0x7ff7af880190
-Freed: 0x7fff52d16af8
-Freed: 0x7fff52d16af8
-Freed: 0x7fff52d16af8
-Freed: 0x7fff52d16af8
-# ...
+$ rake spec
 ```
 
-Here we see that the object we expect to be freed is at `0x7ff7af880190` however when we try to print out the pointer of each object being freed, they are all the same. Here is the code I am using to print out the pointer:
+or "why not both":
 
-```c
-static void
-freeobj_i(VALUE tpval, void *data)
-{
-    // struct traceobj_arg *arg = (struct traceobj_arg *)data;
-
-    rb_trace_arg_t *tparg = rb_tracearg_from_tracepoint(tpval);
-    VALUE obj = rb_tracearg_object(tparg);
-
-    void *ptr = DATA_PTR(obj);
-
-    printf("Freed: %p\n", (void*)&ptr); // <=== Print out here
-    // ...
+```
+$ rake compile spec
 ```
 
-**Questions:**
+## License
 
-1) Is there a better way to "trace" a specific object than by memory address?
-2) If memory address is the correct way to achieve my goal, do you know what is wrong with this program?
+MIT
 
-Can you please share your thoughts?
+Copyright Richard Schneeman 2016
 
-## Installation
-
-Add this line to your application's Gemfile:
-
-    gem 'living_dead'
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install living_dead
-
-## Usage
 
