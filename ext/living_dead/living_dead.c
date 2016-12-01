@@ -1,5 +1,3 @@
-
-
 #include "ruby/ruby.h"
 #include "ruby/debug.h"
 #include <assert.h>
@@ -63,8 +61,13 @@ static const struct st_hash_type memcmp_hash_type = {
     memcmp_hash_compare, memcmp_hash_hash
 };
 
-static struct traceobj_arg *tmp_trace_arg; /* TODO: Do not use global variables */
+static struct traceobj_arg *tmp_trace_arg;
 
+/*
+ * I honestly coppied this from https://github.com/ko1/allocation_tracer
+ * We don't need all this per-say. However it's not hurting anything by being here
+ * at the moment. Same goes for the majority of code above this point.
+ */
 static struct traceobj_arg *
 get_traceobj_arg(void)
 {
@@ -83,7 +86,15 @@ get_traceobj_arg(void)
     return tmp_trace_arg;
 }
 
-
+/*
+ *
+ * [Internal] Callback for the RUBY_INTERNAL_EVENT_FREEOBJ event
+ *
+ * When an object is freed we check if we are tracing it.
+ * If we are, then we register in the `freed_hash` that it has
+ * been freed by setting the `object_id` key to a value of `true`
+ *
+ */
 static void
 freeobj_i(VALUE tpval, void *data)
 {
@@ -96,10 +107,12 @@ freeobj_i(VALUE tpval, void *data)
     VALUE object_id = rb_obj_id(obj);
 
 
+    // Useful for debugging, we cannot use `rb_p` here since it allocates new memory
+    // Using `rb_p` here will cause a SEGV.
+    //
     // long oid = NUM2LONG(rb_obj_id(obj));
     // printf("Freed: %lu\n", oid);
 
-    // We are tracing the object_id
     if (rb_hash_aref(object_id_tracing_hash, object_id) != Qnil ) {
         rb_hash_aset(freed_object_id_hash, rb_obj_id(obj), Qtrue);
     }
@@ -119,6 +132,14 @@ freeobj_i(VALUE tpval, void *data)
 // }
 
 
+/*
+ *
+ *  call-seq:
+ *     LivingDead.start -> nil
+ *
+ * Begins tracing object free events
+ *
+ */
 static VALUE
 living_dead_start(VALUE self)
 {
@@ -145,24 +166,15 @@ living_dead_start(VALUE self)
 /*
  *
  *  call-seq:
- *     LivingDead.trace(object)  -> nil
+ *     LivingDead.freed_hash  -> {}
  *
- * Traces a specific object to see if it is retained or freed
+ * Returns a hash of freed object ids
+ *
+ * The keys are the object ID, values are `true` if they have been freed
+ * otherwise `false`. Note you must invoke GC before calling this method
+ * see LivingDead.gc_start
  *
  */
-// static VALUE
-// living_dead_trace(VALUE self, VALUE obj)
-// {
-//     living_dead_start(self);
-
-//     VALUE object_id_tracing_hash = rb_ivar_get(rb_mLivingDead, rb_intern("object_id_tracing_hash"))
-
-//     rb_hash_aset(object_id_tracing_hash, rb_obj_id(obj), Qtrue);
-
-//     return Qnil;
-// }
-
-
 static VALUE
 living_dead_freed_hash(VALUE self)
 {
@@ -171,7 +183,17 @@ living_dead_freed_hash(VALUE self)
     return freed_object_id_hash;
 }
 
-
+/*
+ *
+ *  call-seq:
+ *     LivingDead.tracing_hash  -> {}
+ *
+ * Returns a hash of traced object ids
+ *
+ * The keys are the object ID of the object being traced, values are all truthy.
+ * In `LivingDead.trace` we set the value to be an instance of `LivingDead::ObjectTrace`.
+ *
+ */
 static VALUE
 living_dead_tracing_hash(VALUE self)
 {
@@ -186,6 +208,7 @@ Init_living_dead(void)
 {
     VALUE mod = rb_mLivingDead = rb_const_get(rb_cObject, rb_intern("LivingDead"));
 
+    // LivingDead.trace is a ruby level method
     // rb_define_module_function(mod, "trace",      living_dead_trace, 1);
     rb_define_module_function(mod, "start",      living_dead_start, 0);
     rb_define_module_function(mod, "freed_hash", living_dead_freed_hash, 0);
