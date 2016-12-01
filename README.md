@@ -2,13 +2,13 @@
 
 [![Build Status](https://travis-ci.org/schneems/living_dead.svg?branch=master)](https://travis-ci.org/schneems/living_dead)
 
-This module allows to see if an object is retained "still alive" or if it is freed "dead".
+This module allows you to see if an object is retained "still alive" or if it is freed "dead".
 
 ![Dancing Zombies](https://www.dropbox.com/s/lshgqzek77107mh/zombies.gif?dl=1)
 
 ## Problems
 
-There be dragons see `LivingDead.gc_start` to see some of the hacks we have to do for who knows why to get this to work.
+There be dragons, see `LivingDead.gc_start` to see some of the hacks we have to do, for who knows why, to get this to work.
 
 ## Install
 
