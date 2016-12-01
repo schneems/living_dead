@@ -26,10 +26,10 @@ $ bundle install
 
 ## How it works
 
-Before you use this you should understand how it works. This gem is a c-extension. It hooks into the Ruby tracepoint API and registeres a hook for the `RUBY_INTERNAL_EVENT_FREEOBJ` event. This
+Before you use this you should understand how it works. This gem is a c-extension. It hooks into the Ruby tracepoint API and registers a hook for the `RUBY_INTERNAL_EVENT_FREEOBJ` event. This
 event gets called when an object is freed (i.e. it is not retained and garbage collection has been called).
 
-When you call `LivingDead.trace(obj)` we store the `object_id` of the thing you are "tracing" in a hash. Then inside of our c-extension hook we listen for when an object is freed. When this happens we check to see if that object's `object_id` matches one in our hash. If it does we mark it down in a seperate "freed" hash.
+When you call `LivingDead.trace(obj)` we store the `object_id` of the thing you are "tracing" in a hash. Then inside of our c-extension hook we listen for when an object is freed. When this happens we check to see if that object's `object_id` matches one in our hash. If it does we mark it down in a separate "freed" hash.
 
 We don't retain the objects you are tracing but we do keep a copy of the `object_id`, we can then use this same number to check the freed hash to see if it was recorded as being freed.
 
@@ -45,10 +45,10 @@ Here is an example of tracing an object that is not retained:
 require 'living_dead'
 
 def run
-  obj = Object.new
-  LivingDead.trace(obj)
+  obj = Object.new
+  LivingDead.trace(obj)
 
-  return nil
+  return nil
 end
 
 run
@@ -65,10 +65,10 @@ Here is an example of tracing an object that IS retained:
 require 'living_dead'
 
 def run
-  obj = Object.new
-  LivingDead.trace(obj)
+  obj = Object.new
+  LivingDead.trace(obj)
 
-  return obj
+  return obj
 end
 
 @retained_here = run
@@ -104,5 +104,3 @@ $ rake compile spec
 MIT
 
 Copyright Richard Schneeman 2016
-
-
