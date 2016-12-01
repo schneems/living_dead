@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = LivingDead::VERSION
   spec.authors       = ["Richard Schneeman"]
   spec.email         = ["richard.schneeman+rubygems@gmail.com"]
-  spec.summary       = %q{living_dead gem adds LivingDead module.}
-  spec.description   = %q{living_dead gem adds LivingDead module.}
+  spec.summary       = %q{LivingDead traces objects to see if they are retained or freed by MRI}
+  spec.description   = %q{LivingDead traces objects to see if they are retained or freed by MRI}
   spec.homepage      = "https://github.com/schneems/living_dead"
   spec.license       = "MIT"
 
