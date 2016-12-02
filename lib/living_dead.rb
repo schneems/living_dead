@@ -2,17 +2,30 @@ require "living_dead/version"
 require "living_dead/living_dead"
 
 require 'stringio'
+require 'objspace'
 
 module LivingDead
 
   @string_io = StringIO.new
+  @tracing_hash = {}
+  @freed_hash   = {}
+
+  def self.tracing_hash
+    @tracing_hash
+  end
+
+  def self.freed_hash
+    @freed_hash
+  end
 
   def self.trace(*args)
-    self.start
+    # self.start
     trace = ObjectTrace.new(*args)
 
     self.tracing_hash[trace.key] = trace
     self.freed_hash[trace.key]   = false
+
+    ObjectSpace.define_finalizer(args.first, -> (object_id) { LivingDead.freed_hash[object_id] = true })
   end
 
   def self.traced_objects

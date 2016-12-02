@@ -206,12 +206,12 @@ living_dead_tracing_hash(VALUE self)
 void
 Init_living_dead(void)
 {
-    VALUE mod = rb_mLivingDead = rb_const_get(rb_cObject, rb_intern("LivingDead"));
+    // VALUE mod = rb_mLivingDead = rb_const_get(rb_cObject, rb_intern("LivingDead"));
 
-    // LivingDead.trace is a ruby level method
-    // rb_define_module_function(mod, "trace",      living_dead_trace, 1);
-    rb_define_module_function(mod, "start",      living_dead_start, 0);
-    rb_define_module_function(mod, "freed_hash", living_dead_freed_hash, 0);
-    rb_define_module_function(mod, "tracing_hash", living_dead_tracing_hash, 0);
+    // // LivingDead.trace is a ruby level method
+    // // rb_define_module_function(mod, "trace",      living_dead_trace, 1);
+    // rb_define_module_function(mod, "start",      living_dead_start, 0);
+    // rb_define_module_function(mod, "freed_hash", living_dead_freed_hash, 0);
+    // rb_define_module_function(mod, "tracing_hash", living_dead_tracing_hash, 0);
 
 }
