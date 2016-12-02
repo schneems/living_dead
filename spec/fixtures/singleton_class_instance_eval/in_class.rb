@@ -15,10 +15,13 @@ class Runner
 end
 
 Runner.new.run
+Runner.new.run
+Runner.new.run
+Runner.new.run
 
 alive_count = LivingDead.traced_objects.select { |tracer| tracer.retained? }.length
 
-expected = Integer(ENV["EXPECTED_OUT"] || 0)
+expected = Integer(ENV["EXPECTED_OUT"] || 1)
 actual = alive_count
 result = expected == actual ? "PASS" : "FAIL"
 puts "#{result}: expected: #{expected}, actual: #{actual}"
