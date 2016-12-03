@@ -3,29 +3,20 @@ require "living_dead/living_dead"
 
 require 'stringio'
 require 'objspace'
+require 'weakref'
 
 module LivingDead
 
   @string_io = StringIO.new
   @tracing_hash = {}
-  @freed_hash   = {}
 
   def self.tracing_hash
     @tracing_hash
   end
 
-  def self.freed_hash
-    @freed_hash
-  end
-
   def self.trace(*args)
-    # self.start
-    trace = ObjectTrace.new(*args)
-
-    self.tracing_hash[trace.key] = trace
-    self.freed_hash[trace.key]   = false
-
-    ObjectSpace.define_finalizer(args.first, -> (object_id) { LivingDead.freed_hash[object_id] = true })
+    obj_trace = ObjectTrace.new(*args)
+    self.tracing_hash[obj_trace.key] = obj_trace
   end
 
   def self.traced_objects
@@ -58,7 +49,7 @@ module LivingDead
       # LivingDead calling `singleton_class.instance_eval` does not retain in the simple case
       # fails without this.
       #
-      LivingDead.freed_hash
+      # LivingDead.freed_hash
 
       # Calling GC multiple times fixes a different class of things
       # Specifically the singleton_class.instance_eval tests.
@@ -74,16 +65,14 @@ module LivingDead
   public
 
   def self.freed_objects
-    gc_start
-    freed_hash.map do |key, _|
-      tracing_hash[key]
-    end
+    traced_objects.select {|x| x.freed? }
   end
 
   class ObjectTrace
     def initialize(obj = nil, object_id: nil, to_s: nil)
       @object_id = object_id || obj.object_id
       @to_s      = to_s&.dup || obj.to_s.dup
+      @weakref   = WeakRef.new(obj)
     end
 
     def to_s
@@ -95,11 +84,11 @@ module LivingDead
     end
 
     def retained?
-      !freed?
+      @weakref.weakref_alive?
     end
 
     def freed?
-      !!LivingDead.freed_hash[@object_id]
+      !retained?
     end
 
     def key
