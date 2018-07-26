@@ -11,6 +11,7 @@ Rake::ExtensionTask.new("living_dead", spec){|ext|
 RSpec::Core::RakeTask.new('spec' => 'compile')
 
 task default: :spec
+task test: :spec
 
 task :run => 'compile' do
   ruby %q{-I ./lib test.rb}
